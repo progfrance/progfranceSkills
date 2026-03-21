@@ -1,4 +1,3 @@
-yaml
 ---
 name: kanban-todo-git
 description: A hybrid TODO scanner and Kanban board that uses Git history to track work item flow and calculate metrics. Scans for BUG/TODO/IMPROVEMENT markers, organizes them into feature groups, and
