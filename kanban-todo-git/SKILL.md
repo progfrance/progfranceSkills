@@ -1,4 +1,12 @@
-# kanban-todo-git
+```yaml
+   ---
+   name: kanban-todo-git
+   description: A hybrid TODO scanner and Kanban board that uses Git history to track work item flow and calculate metrics. Scans for BUG/TODO/IMPROVEMENT markers, organizes them into feature groups, and
+   maintains a Markdown Kanban board (To Do, In Progress, Review, Done) with WIP limits, lead/cycle time metrics, and bottleneck analysis.
+   category: productivity
+   ---
+
+   # kanban-todo-git
 
    A hybrid TODO scanner and Kanban board that uses Git history to track work item flow and calculate metrics. Scans for BUG/TODO/IMPROVEMENT markers, organizes them into feature groups, and maintains a
    Markdown Kanban board (To Do, In Progress, Review, Done) with WIP limits, lead/cycle time metrics, and bottleneck analysis.
@@ -72,7 +80,7 @@
    ### Step 4 — Apply WIP Limits Advisory
    After populating columns:
    - Calculate current count per column
-   - Compare to WIP limits (To Do:3, In Progress:2, Review:1)
+   - Compare to WIP limits (To Do:3, In Progress:2, Review=1)
    - If any column exceeds its limit, flag in output:
      ```
      ⚠️ WIP Advisory: In Progress has 3 items (limit: 2)
@@ -105,7 +113,7 @@
    ### Step 7 — Generate Output Report
    Write to project root `TODO.md` with these sections:
 
-   
+   ```
    # TODO Board > Last updated: YYYY-MM-DD via /kanban-todo-git
 
    ## To Do (WIP limit: 3)
@@ -213,3 +221,4 @@
    4. **Adjust exclusions**: Add project-specific paths to exclude list (e.g., `marcel/archive/`)
 
    The skill is designed to be a living process — tune the WIP limits and experiment duration based on your team's (human + agent) capacity and feedback from retrospectives.
+   ```
