@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>RSS Feeds for AI Aggregator</title>
+  </head>
+  <body>
+    <outline text="Reddit r/PromptEngineering" type="rss" xmlUrl="https://www.reddit.com/r/PromptEngineering/.rss" />
+    <outline text="Reddit r/GeminiAI" type="rss" xmlUrl="https://www.reddit.com/r/GeminiAI/.rss" />
+    <outline text="Reddit r/GeminiAIConstructive" type="rss" xmlUrl="https://www.reddit.com/r/GeminiAIConstructive/.rss" />
+    <outline text="Reddit r/GoogleAIStudio" type="rss" xmlUrl="https://www.reddit.com/r/GoogleAIStudio/.rss" />
+    <outline text="Reddit r/LocalLLaMA (French)" type="rss" xmlUrl="https://www.reddit.com/r/LocalLLaMA/.rss" />
+  </body>
+</opml>

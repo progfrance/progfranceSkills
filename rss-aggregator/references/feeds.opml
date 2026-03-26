@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>RSS Feeds for AI Aggregator</title>
+  </head>
+  <body>
+    <outline text="Blog du Modérateur" type="rss" xmlUrl="https://www.blogdumoderateur.com/feed/" />
+    <outline text="Intelligence Artificielle" type="rss" xmlUrl="https://intelligence-artificielle.com/feed/" />
+    <outline text="Journal du Geek - IA" type="rss" xmlUrl="https://www.journaldugeek.com/category/intelligence-artificielle/feed/" />
+  </body>
+</opml>
