@@ -94,3 +94,25 @@ Pour adapter ce script à votre flux de travail :
 1. Éditez le dictionnaire `WIP_LIMITS` en haut du fichier `kanban_scanner.py`.
 2. Ajoutez de nouveaux dossiers à ignorer dans le set `EXCLUDED_DIRS`.
 3. Modifiez la liste `MARKERS` si vous souhaitez suivre `FIXME:` ou `HACK:`.
+
+## Intégration Multi-Agents (Hermes & Discord)
+
+Ce skill est conçu pour s'intégrer dans un écosystème multi-agents (ex: un Coordinateur et un Développeur) communiquant via Discord.
+
+### Configuration du Coordinateur (Cron)
+Le coordinateur doit lire la sortie `--json` du script et distribuer les rôles sur différents canaux :
+- **Reporting & Alertes WIP :** Envoyés dans le canal de management.
+- **Délégation de code :** Envoyée dans le canal technique.
+
+### Le Prompt de Délégation (Standard)
+Lorsque le Coordinateur assigne une tâche issue du Kanban à l'Agent Codeur, il DOIT utiliser cette structure de prompt pour garantir que le Kanban se mette à jour automatiquement au prochain cycle :
+
+> "Agent Codeur, j'ai une tâche prioritaire pour toi issue du Kanban.
+> **Mission :** {tache_desc}
+> **Emplacement :** Fichier `{fichier}`, autour de la ligne `{ligne}`.
+> 
+> **Instructions strictes :**
+> 1. Analyse le contexte autour du marqueur.
+> 2. Apporte la correction nécessaire au code.
+> 3. **CRUCIAL :** Une fois la correction faite, tu dois IMPÉRATIVEMENT supprimer la ligne contenant le commentaire d'origine (`// BUG: ...` ou `# TODO: ...`). C'est cette suppression qui permet au système Kanban de détecter que la tâche est 'Done'.
+> 4. Ne modifie pas le reste du fichier si ce n'est pas strictement nécessaire."
