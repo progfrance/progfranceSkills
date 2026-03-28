@@ -11,6 +11,7 @@ import argparse
 WIP_LIMITS = {"To Do": 3, "In Progress": 2, "Review": 1}
 MARKERS = ["BUG", "TODO", "IMPROVEMENT"]
 EXCLUDED_DIRS = {".git", "node_modules", "dist", "build", "coverage", ".next", "out", ".cache", "__pycache__"}
+EXCLUDED_EXTENSIONS = {".md"}  # Protection contre l'auto-scan des fichiers Markdown
 TODO_FILE = "TODO.md"
 
 class KanbanAgentCoordinator:
@@ -22,14 +23,18 @@ class KanbanAgentCoordinator:
             "Review": [],
             "Done": []
         }
-        self.code_items = {} # clef: "TYPE: description", valeur: location
+        self.code_items = {} 
 
     def scan_codebase(self):
         """Étape 1 & 2 : Scanne le code et groupe les éléments."""
         pattern = re.compile(rf"({'|'.join(MARKERS)}):\s*(.*)")
         
+        # On scanne récursivement le dossier cible
         for filepath in self.root_dir.rglob("*"):
-            if not filepath.is_file() or any(part in EXCLUDED_DIRS for part in filepath.parts):
+            # Condition : pas un dossier exclu, ET pas une extension exclue (.md)
+            if (not filepath.is_file() or 
+                any(part in EXCLUDED_DIRS for part in filepath.parts) or
+                filepath.suffix.lower() in EXCLUDED_EXTENSIONS):
                 continue
                 
             try:
@@ -39,22 +44,23 @@ class KanbanAgentCoordinator:
                         if match:
                             marker_type, desc = match.groups()
                             desc = desc.strip()
-                            # Normalisation du chemin (séparateurs Unix)
+                            # Localisation relative au dossier racine du scan
                             loc = f"{filepath.relative_to(self.root_dir).as_posix()}:{line_num}"
                             key = f"{marker_type}: {desc}"
                             self.code_items[key] = loc
             except (UnicodeDecodeError, PermissionError):
-                pass # Ignorer les fichiers binaires ou inaccessibles
+                pass 
 
     def parse_existing_board(self):
-        """Analyse le TODO.md existant pour préserver l'état (idempotence)."""
-        if not (self.root_dir / TODO_FILE).exists():
+        """Analyse le TODO.md à la racine pour préserver l'état."""
+        todo_path = Path(".") / TODO_FILE
+        if not todo_path.exists():
             return
 
         current_column = None
         item_pattern = re.compile(r"- \[( |x|~)\] (BUG|TODO|IMPROVEMENT): (.*?) \((.*?)\)")
 
-        with open(self.root_dir / TODO_FILE, 'r', encoding='utf-8') as f:
+        with open(todo_path, 'r', encoding='utf-8') as f:
             for line in f:
                 if line.startswith("## To Do"): current_column = "To Do"
                 elif line.startswith("## In Progress"): current_column = "In Progress"
@@ -66,18 +72,13 @@ class KanbanAgentCoordinator:
                         state, m_type, desc, loc = match.groups()
                         key = f"{m_type}: {desc}"
                         self.board[current_column].append({
-                            "key": key,
-                            "type": m_type,
-                            "desc": desc,
-                            "loc": loc,
-                            "state_char": state
+                            "key": key, "type": m_type, "desc": desc, "loc": loc, "state_char": state
                         })
 
     def sync_board(self):
         """Étape 3 : Met à jour les colonnes sans perdre l'état manuel."""
         existing_keys = {item["key"]: item for col in self.board.values() for item in col}
         
-        # 1. Ajouter les nouveaux éléments trouvés dans le code
         for key, loc in self.code_items.items():
             if key not in existing_keys:
                 m_type, desc = key.split(": ", 1)
@@ -85,10 +86,8 @@ class KanbanAgentCoordinator:
                     "key": key, "type": m_type, "desc": desc, "loc": loc, "state_char": " "
                 })
             else:
-                # Mettre à jour la localisation si elle a changé
                 existing_keys[key]["loc"] = loc
 
-        # 2. Déplacer vers "Done" les éléments qui ne sont plus dans le code
         for col in ["To Do", "In Progress", "Review"]:
             items_to_keep = []
             for item in self.board[col]:
@@ -100,19 +99,15 @@ class KanbanAgentCoordinator:
             self.board[col] = items_to_keep
 
     def generate_markdown(self):
-        """Étape 4 & 7 : Génère le rapport Markdown et signale les dépassements WIP."""
+        """Génère le rapport Markdown final."""
         today = datetime.now().strftime("%Y-%m-%d")
-        lines = [
-            f"# TODO Board > Last updated: {today} via KanbanAgent",
-            ""
-        ]
+        lines = [f"# TODO Board > Last updated: {today} via KanbanAgent", ""]
 
         bottlenecks = []
         for col, items in self.board.items():
             limit_text = f" (WIP limit: {WIP_LIMITS[col]})" if col in WIP_LIMITS else ""
             lines.append(f"## {col}{limit_text}")
             
-            # Vérification des WIP limits
             if col in WIP_LIMITS and len(items) > WIP_LIMITS[col]:
                 bottlenecks.append(f"⚠️ **WIP Advisory**: {col} has {len(items)} items (limit: {WIP_LIMITS[col]})")
 
@@ -123,10 +118,10 @@ class KanbanAgentCoordinator:
 
         if bottlenecks:
             lines.append("### Bottleneck Analysis")
-            for b in bottlenecks:
-                lines.append(f"- {b}")
+            for b in bottlenecks: lines.append(f"- {b}")
 
-        with open(self.root_dir / TODO_FILE, 'w', encoding='utf-8') as f:
+        # On écrit toujours le TODO.md à la racine du projet
+        with open(Path(".") / TODO_FILE, 'w', encoding='utf-8') as f:
             f.write("\n".join(lines))
             
         return bottlenecks
@@ -137,9 +132,9 @@ class KanbanAgentCoordinator:
         self.sync_board()
         bottlenecks = self.generate_markdown()
 
-        # Construction d'un payload pour l'Agent IA Coordinateur
         agent_payload = {
             "status": "success",
+            "directory_scanned": str(self.root_dir),
             "wip_alerts": bottlenecks,
             "metrics": {
                 "todo_count": len(self.board["To Do"]),
@@ -152,15 +147,16 @@ class KanbanAgentCoordinator:
         if output_json:
             print(json.dumps(agent_payload, indent=2))
         else:
-            print(f"✅ TODO.md mis à jour avec succès.")
-            for alert in bottlenecks:
-                print(alert)
-            print(f"Tâches prêtes à être dispatchées : {len(self.board['To Do'])}")
+            print(f"✅ TODO.md mis à jour (Scan du dossier : {self.root_dir})")
+            for alert in bottlenecks: print(alert)
+            print(f"Tâches prêtes : {len(self.board['To Do'])}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Kanban TODO Scanner for AI Agents")
+    # Ajout de l'argument positionnel pour le dossier
+    parser.add_argument("directory", nargs="?", default=".", help="Dossier à scanner (défaut: '.')")
     parser.add_argument("--json", action="store_true", help="Output JSON for AI coordinator consumption")
     args = parser.parse_args()
     
-    agent = KanbanAgentCoordinator()
+    agent = KanbanAgentCoordinator(root_dir=args.directory)
     agent.run(output_json=args.json)
