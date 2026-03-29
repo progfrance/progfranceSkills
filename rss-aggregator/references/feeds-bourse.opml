@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <head>
+    <title>RSS Feeds for AI Aggregator</title>
+  </head>
+  <body>
+    <outline text="Actu et Conseils - BFM Bourse" type="rss" xmlUrl="https://www.tradingsat.com/rssbourse.xml" />
+    <outline text="MorningStar" type="rss" xmlUrl="http://www.morningstar.fr/fr/feeds/rss.aspx?lang=fr-FR" />
+  </body>
+</opml>

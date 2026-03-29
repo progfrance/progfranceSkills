@@ -1,0 +1,13 @@
+{
+  "urls": [
+    "https://example.com/article-1",
+    "https://example.com/article-2"
+  ],
+  "options": {
+    "extract_full_content": true,
+    "remove_scripts": true,
+    "remove_styles": true,
+    "timeout": 30
+  },
+  "selectors": null
+}
